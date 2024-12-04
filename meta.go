@@ -3,6 +3,7 @@ package botmother
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/samber/lo"
@@ -25,6 +26,10 @@ const (
 	META_PREFIX = "tg://meta/"
 )
 
+func AddMetaText(text string, meta string) string {
+	return fmt.Sprintf("<a href='tg://meta/%s'>%s</a>", meta, string('\u200b')) + text
+}
+
 func GetMetaText(ctx telebot.Context, reply bool) (string, bool) {
 	m := ctx.Message()
 	if reply {
@@ -39,6 +44,11 @@ func GetMetaText(ctx telebot.Context, reply bool) (string, bool) {
 	}
 
 	return strings.TrimPrefix(entity.URL, META_PREFIX), true
+}
+
+func AddMetaData(text string, meta *Meta) string {
+	data, _ := json.Marshal(meta)
+	return AddMetaText(text, base64.StdEncoding.EncodeToString(data))
 }
 
 func GetMetaData(ctx telebot.Context, reply bool) (*Meta, error) {
