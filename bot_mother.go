@@ -14,7 +14,7 @@ type (
 	}
 
 	BotMother struct {
-		bot         *telebot.Bot
+		Bot         *telebot.Bot
 		Logger      Logger
 		layouts     sync.Map
 		callbackMap sync.Map
@@ -50,7 +50,7 @@ func NewBotMother(opts ...ConfigOption) (*BotMother, error) {
 	}
 
 	bot.Use(middleware.AutoRespond())
-	bm.bot = bot
+	bm.Bot = bot
 
 	for _, locale := range cfg.Locales {
 		layout, err := NewLayout(locale.Code, cfg.LayoutFile, locale.LocaleFile)
@@ -68,7 +68,7 @@ func NewBotMother(opts ...ConfigOption) (*BotMother, error) {
 }
 
 func (bm *BotMother) Start() {
-	bot := bm.bot
+	bot := bm.Bot
 
 	if bm.router == nil {
 		panic("router MUST be set before start")
@@ -82,11 +82,11 @@ func (bm *BotMother) Start() {
 		return bm.handleCallback(c)
 	})
 
-	go bm.bot.Start()
+	go bm.Bot.Start()
 }
 
 func (bm *BotMother) Stop() {
-	bm.bot.Stop()
+	bm.Bot.Stop()
 }
 
 func (bm *BotMother) GetLayout(locale string) *Layout {
