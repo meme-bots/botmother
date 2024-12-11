@@ -12,17 +12,17 @@ import (
 type (
 	Router interface {
 		DefaultMessageHandler(ctx telebot.Context) error
+		GetLocaleFromStorage(ctx telebot.Context) (string, error)
 	}
 
 	BotMother struct {
-		Bot           *telebot.Bot
-		Logger        Logger
-		layouts       sync.Map
-		callbackMap   sync.Map
-		messageMap    sync.Map
-		router        Router
-		localeMap     *expirable.LRU[int64, string]
-		GetLocaleImpl func(ctx telebot.Context) (string, error)
+		Bot         *telebot.Bot
+		Logger      Logger
+		layouts     sync.Map
+		callbackMap sync.Map
+		messageMap  sync.Map
+		router      Router
+		localeMap   *expirable.LRU[int64, string]
 	}
 )
 
@@ -115,7 +115,7 @@ func (bm *BotMother) GetLocale(ctx telebot.Context) string {
 	if ok {
 		return locale
 	} else {
-		ret, err := bm.GetLocaleImpl(ctx)
+		ret, err := bm.router.GetLocaleFromStorage(ctx)
 		if err != nil {
 			return DEFAULT_LOCALE
 		}
