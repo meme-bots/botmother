@@ -22,7 +22,7 @@ type (
 		messageMap    sync.Map
 		router        Router
 		localeMap     *expirable.LRU[int64, string]
-		GetLocaleImpl func(telegramID int64) (string, error)
+		GetLocaleImpl func(ctx telebot.Context) (string, error)
 	}
 )
 
@@ -108,24 +108,25 @@ func (bm *BotMother) GetDefaultLayout() *Layout {
 	return bm.GetLayout(DEFAULT_LOCALE)
 }
 
-func (bm *BotMother) GetLocale(telegramID int64) string {
-	locale, ok := bm.localeMap.Get(telegramID)
+func (bm *BotMother) GetLocale(ctx telebot.Context) string {
+	tid := ctx.Sender().ID
+	locale, ok := bm.localeMap.Get(tid)
 	if ok {
 		return locale
 	} else {
-		ret, err := bm.GetLocaleImpl(telegramID)
+		ret, err := bm.GetLocaleImpl(ctx)
 		if err != nil {
 			return DEFAULT_LOCALE
 		}
-		bm.localeMap.Add(telegramID, ret)
+		bm.localeMap.Add(tid, ret)
 		return ret
 	}
 }
 
-func (bm *BotMother) SetLocale(telegramID int64, locale string) {
-	bm.localeMap.Add(telegramID, locale)
+func (bm *BotMother) SetLocale(ctx telebot.Context, locale string) {
+	bm.localeMap.Add(ctx.Sender().ID, locale)
 }
 
-func (bm *BotMother) GetText(tid int64, text string) string {
-	return bm.GetLayout(bm.GetLocale(tid)).GetText(text)
+func (bm *BotMother) GetText(ctx telebot.Context, text string) string {
+	return bm.GetLayout(bm.GetLocale(ctx)).GetText(text)
 }
