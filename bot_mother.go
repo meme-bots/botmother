@@ -41,7 +41,8 @@ func NewBotMother(opts ...ConfigOption) (*BotMother, error) {
 	}
 
 	bm := &BotMother{
-		Logger: cfg.Logger,
+		Logger:    cfg.Logger,
+		localeMap: expirable.NewLRU[int64, string](10000, nil, time.Hour),
 	}
 
 	pref := telebot.Settings{
