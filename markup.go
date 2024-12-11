@@ -42,8 +42,8 @@ func CreateMarkup(buttons [][]Button, data interface{}) *telebot.ReplyMarkup {
 	return markup
 }
 
-func (bm *BotMother) CreatePage(locale string, pageID string, data interface{}) (string, *telebot.ReplyMarkup, error) {
-	layout := bm.GetLayout(locale)
+func (bm *BotMother) CreatePage(telegramID int64, pageID string, data interface{}) (string, *telebot.ReplyMarkup, error) {
+	layout := bm.GetLayout(bm.GetLocale(telegramID))
 	page := layout.Pages[pageID]
 
 	t := template.Must(template.New("t").Parse(page.Message))
