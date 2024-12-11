@@ -4,6 +4,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hashicorp/golang-lru/v2/expirable"
 	"gopkg.in/telebot.v3"
 	"gopkg.in/telebot.v3/middleware"
 )
@@ -14,13 +15,19 @@ type (
 	}
 
 	BotMother struct {
-		Bot         *telebot.Bot
-		Logger      Logger
-		layouts     sync.Map
-		callbackMap sync.Map
-		messageMap  sync.Map
-		router      Router
+		Bot           *telebot.Bot
+		Logger        Logger
+		layouts       sync.Map
+		callbackMap   sync.Map
+		messageMap    sync.Map
+		router        Router
+		localeMap     *expirable.LRU[int64, string]
+		GetLocaleImpl func(telegramID int64) (string, error)
 	}
+)
+
+const (
+	DEFAULT_LOCALE = "en"
 )
 
 func NewBotMother(opts ...ConfigOption) (*BotMother, error) {
@@ -98,5 +105,27 @@ func (bm *BotMother) GetLayout(locale string) *Layout {
 }
 
 func (bm *BotMother) GetDefaultLayout() *Layout {
-	return bm.GetLayout("en")
+	return bm.GetLayout(DEFAULT_LOCALE)
+}
+
+func (bm *BotMother) GetLocale(telegramID int64) string {
+	locale, ok := bm.localeMap.Get(telegramID)
+	if ok {
+		return locale
+	} else {
+		ret, err := bm.GetLocaleImpl(telegramID)
+		if err != nil {
+			return DEFAULT_LOCALE
+		}
+		bm.localeMap.Add(telegramID, ret)
+		return ret
+	}
+}
+
+func (bm *BotMother) SetLocale(telegramID int64, locale string) {
+	bm.localeMap.Add(telegramID, locale)
+}
+
+func (bm *BotMother) GetText(tid int64, text string) string {
+	return bm.GetLayout(bm.GetLocale(tid)).GetText(text)
 }
